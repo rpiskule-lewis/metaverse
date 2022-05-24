@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Ammo.js terrain heightfield demo</title>
+		<title>Metaverse</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
@@ -25,7 +25,7 @@
 		</div>
 
 		<div id="container"></div>
-		<div id="info">Ammo.js physics terrain heightfield demo</div>
+		<div id="info">Metaverse</div>
 
 		<script src="js/libs/ammo.wasm.js"></script>
 
@@ -40,7 +40,6 @@
 				}
 			}
 		</script>
-
 		<script type="module">
 
 			import * as THREE from 'three';
@@ -51,18 +50,21 @@
 			import { FlyControls } from './jsm/controls/FlyControls.js';
 			import { FirstPersonControls } from './jsm/controls/FirstPersonControls.js';
 			import { PointerLockControls } from './jsm/controls/PointerLockControls.js';
-
-
+			import { enableWater, water, waterLevel, waterEnabled } from './customjs/water.js'
+			import { Sky } from './jsm/objects/Sky.js';
 
 			// Heightfield parameters
-			const terrainWidthExtents = 100;
-			const terrainDepthExtents = 100;
+			//const terrainWidthExtents = 10;
+			//const terrainDepthExtents = 10;
 			const terrainWidth = 128;
 			const terrainDepth = 128;
 			const terrainHalfWidth = terrainWidth / 2;
 			const terrainHalfDepth = terrainDepth / 2;
 			const terrainMaxHeight = 8;
 			const terrainMinHeight = - 2;
+			const xTiles=20
+			const yTiles=20
+			var sun
 
 			// Graphics variables
 			let container, stats;
@@ -155,9 +157,42 @@
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0xbfd1e5 );
 
-				camera.position.y = 10;
+				camera.position.y = 100;
 				camera.position.z = 10;
 				camera.lookAt( 0, 0, 0 );
+
+
+				enableWater(scene)
+				
+				var sun = new THREE.Vector3();
+				const sky = new Sky();
+				sky.scale.setScalar( 10000 );
+				scene.add( sky );
+				const skyUniforms = sky.material.uniforms;
+				skyUniforms[ 'turbidity' ].value = 10;
+				skyUniforms[ 'rayleigh' ].value = 2;
+				skyUniforms[ 'mieCoefficient' ].value = 0.005;
+				skyUniforms[ 'mieDirectionalG' ].value = 0.8;
+				const parameters = {
+					elevation: 2,
+					azimuth: 180
+				};
+				const pmremGenerator = new THREE.PMREMGenerator( renderer );
+				function updateSun() {
+
+					const phi = THREE.MathUtils.degToRad( 90 - parameters.elevation );
+					const theta = THREE.MathUtils.degToRad( parameters.azimuth );
+
+					sun.setFromSphericalCoords( 1, phi, theta );
+
+					sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
+					if (waterEnabled) {
+						water.material.uniforms[ 'sunDirection' ].value.copy( sun ).normalize();
+					}
+					scene.environment = pmremGenerator.fromScene( sky ).texture;
+
+				}
+				updateSun();
 
 				
 				controls = new FirstPersonControls( camera, renderer.domElement );
@@ -189,43 +224,47 @@
 
 				} );
 
-				var img = new Image();
-				img.onload = function () {
-					// https://woodenraft.games/blog/generating-terrain-plane-geometry-three-js
-					//get height data from img
-					var data = getHeightData(img);
-					console.log(data)
-					console.log(this.width,this.height,this.width-1,this.height-1)
-				
-					// plane
-					var geometry = new THREE.PlaneBufferGeometry(this.width,this.height,this.width-1,this.height-1);
-					console.log(geometry)
-					geometry.rotateX( - Math.PI / 2 );
+				for (let x = 0; x < xTiles; x++) {		
+					for (let y = 0; y < yTiles; y++) {		
+						var img = new Image();
+						img.onload = function () {
+							// https://woodenraft.games/blog/generating-terrain-plane-geometry-three-js
+							//get height data from img
+							var data = getHeightData(img);
+							//console.log(data)
+							//console.log(this.width,this.height,this.width-1,this.height-1)
+						
+							// plane
+							var geometry = new THREE.PlaneBufferGeometry(this.width,this.height,this.width-1,this.height-1);
+							//console.log(geometry)
+							geometry.rotateX( - Math.PI / 2 );
 
-					const positions = geometry.attributes.position.array;
-					const vertex = new THREE.Vector3();
+							const positions = geometry.attributes.position.array;
+							const vertex = new THREE.Vector3();
 
-					var j = 0;
-					for ( let i = 0; i < positions.length; i += 3 ) {
+							var j = 0;
+							for ( let i = 0; i < positions.length; i += 3 ) {
 
-						vertex.fromArray( positions, i );
-						vertex.y = data[j]
-						j++
-						vertex.toArray( positions, i );
+								vertex.fromArray( positions, i );
+								vertex.y = data[j]
+								j++
+								vertex.toArray( positions, i );
 
+							}
+
+							geometry.computeVertexNormals();
+
+							var texture = new THREE.TextureLoader().load( 'assets/heightmap2.png' );
+							var material = new THREE.MeshLambertMaterial( { map: texture } );
+							var plane = new THREE.Mesh( geometry, material );
+							plane.position.set(x*this.width,0,y*this.height)
+							scene.add(plane);
+						
+						};
+						// load img source
+						img.src = "assets/heightmap.png";
 					}
-
-					geometry.computeVertexNormals();
-
-					var texture = new THREE.TextureLoader().load( 'assets/heightmap2.png' );
-					var material = new THREE.MeshLambertMaterial( { map: texture } );
-					var plane = new THREE.Mesh( geometry, material );
-					plane.position.set(0,-50,0)
-					scene.add(plane);
-				
-				};
-				// load img source
-				img.src = "assets/heightmap.png";
+				}
 
 				const light = new THREE.DirectionalLight( 0xffffff, 1 );
 				light.position.set( 100, 100, 50 );
@@ -259,6 +298,65 @@
 
 			}
 
+			function createTerrainShape() {
+				// This parameter is not really used, since we are using PHY_FLOAT height data type and hence it is ignored
+				const heightScale = 1;
+
+				// Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
+				const upAxis = 1;
+
+				// hdt, height data type. "PHY_FLOAT" is used. Possible values are "PHY_FLOAT", "PHY_UCHAR", "PHY_SHORT"
+				const hdt = 'PHY_FLOAT';
+
+				// Set this to your needs (inverts the triangles)
+				const flipQuadEdges = false;
+
+				// Creates height data buffer in Ammo heap
+				ammoHeightData = Ammo._malloc( 4 * terrainWidth * terrainDepth );
+
+				// Copy the javascript height data array to the Ammo one.
+				let p = 0;
+				let p2 = 0;
+
+				for ( let j = 0; j < terrainDepth; j ++ ) {
+
+					for ( let i = 0; i < terrainWidth; i ++ ) {
+
+						// write 32-bit float data to memory
+						Ammo.HEAPF32[ ammoHeightData + p2 >> 2 ] = heightData[ p ];
+
+						p ++;
+
+						// 4 bytes/float
+						p2 += 4;
+
+					}
+
+				}
+
+				// Creates the heightfield physics shape
+				const heightFieldShape = new Ammo.btHeightfieldTerrainShape(
+					terrainWidth,
+					terrainDepth,
+					ammoHeightData,
+					heightScale,
+					terrainMinHeight,
+					terrainMaxHeight,
+					upAxis,
+					hdt,
+					flipQuadEdges
+				);
+
+				// Set horizontal scale
+				const scaleX = terrainWidthExtents / ( terrainWidth - 1 );
+				const scaleZ = terrainDepthExtents / ( terrainDepth - 1 );
+				heightFieldShape.setLocalScaling( new Ammo.btVector3( scaleX, 1, scaleZ ) );
+
+				heightFieldShape.setMargin( 0.05 );
+
+				return heightFieldShape;
+			}
+
 			function initPhysics() {
 
 				// Physics configuration
@@ -272,6 +370,7 @@
 
 				// Create the terrain body
 
+				const groundShape = createTerrainShape();
 				const groundTransform = new Ammo.btTransform();
 				groundTransform.setIdentity();
 				// Shifts the terrain, since bullet re-centers it on its bounding box.
@@ -284,7 +383,7 @@
 
 				transformAux1 = new Ammo.btTransform();
 
-			}
+				}
 
 			function generateObject() {
 
@@ -390,8 +489,18 @@
 				}
 
 				//updatePhysics( deltaTime );
-
+				if (waterEnabled) {
+					water.material.uniforms[ 'time' ].value += 1.0 / 60.0;
+				}
 				renderer.render( scene, camera );
+
+				if (camera.position.y <= waterLevel)
+				{
+					var waterColor=0x024B86
+					scene.fog = new THREE.FogExp2(waterColor, 0.01);
+				} else {
+					scene.fog = new THREE.FogExp2(waterColor, 0);
+				}
 
 				time += deltaTime;
 

@@ -57,6 +57,8 @@ class FirstPersonControls {
 		this.moveLeft = false;
 		this.moveRight = false;
 
+		this.purchase = false;
+
 		this.viewHalfX = 0;
 		this.viewHalfY = 0;
 
@@ -157,6 +159,9 @@ class FirstPersonControls {
 
 				case 'KeyR': this.moveUp = true; break;
 				case 'KeyF': this.moveDown = true; break;
+
+				case 'KeyP': this.purchase = !this.purchase; break;
+
 
 			}
 
