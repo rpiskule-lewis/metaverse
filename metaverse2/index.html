@@ -4,6 +4,7 @@
 		<title>Metaverse</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
 		<link type="text/css" rel="stylesheet" href="main.css">
 		<style>
 			body {
@@ -41,7 +42,6 @@
 			}
 		</script>
 		<script type="module">
-
 			import * as THREE from 'three';
 
 			import Stats from './jsm/libs/stats.module.js';
@@ -52,6 +52,9 @@
 			import { PointerLockControls } from './jsm/controls/PointerLockControls.js';
 			import { enableWater, water, waterLevel, waterEnabled } from './customjs/water.js'
 			import { Sky } from './jsm/objects/Sky.js';
+			import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+			import { FBXLoader } from './jsm/loaders/FBXLoader.js';
+			import * as BufferGeometryUtils from './jsm/utils/BufferGeometryUtils.js';
 
 			// Heightfield parameters
 			//const terrainWidthExtents = 10;
@@ -62,8 +65,10 @@
 			const terrainHalfDepth = terrainDepth / 2;
 			const terrainMaxHeight = 8;
 			const terrainMinHeight = - 2;
-			const xTiles=20
-			const yTiles=20
+			const xTiles=100
+			const yTiles=100
+			const mergeMesh = true
+
 			var sun
 
 			// Graphics variables
@@ -88,6 +93,8 @@
 			const objectTimePeriod = 3;
 			let timeNextSpawn = time + objectTimePeriod;
 			const maxNumObjects = 30;
+
+			let mixer
 
 			Ammo().then( function ( AmmoLib ) {
 
@@ -161,6 +168,49 @@
 				camera.position.z = 10;
 				camera.lookAt( 0, 0, 0 );
 
+				const loader = new GLTFLoader();
+
+				loader.load( 'models/gltf/LeePerrySmith/LeePerrySmith.glb', function ( gltf ) {
+
+					var mesh = gltf.scene.children[ 0 ];
+					mesh.material = new THREE.MeshPhongMaterial( {
+						specular: 0x111111,
+						map: new THREE.TextureLoader().load( 'models/gltf/LeePerrySmith/Map-COL.jpg' ),
+						specularMap: new THREE.TextureLoader().load( 'models/gltf/LeePerrySmith/Map-SPEC.jpg' ),
+						normalMap: new THREE.TextureLoader().load( 'models/gltf/LeePerrySmith/Infinite-Level_02_Tangent_SmoothUV.jpg' ),
+						shininess: 25
+					} );
+
+					scene.add( mesh );
+		
+
+				} );
+
+				// model
+				const fbxloader = new FBXLoader();
+				fbxloader.load( 'models/fbx/Samba Dancing.fbx', function ( object ) {
+
+					mixer = new THREE.AnimationMixer( object );
+
+					const action = mixer.clipAction( object.animations[ 0 ] );
+					action.play();
+
+					object.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							child.castShadow = true;
+							child.receiveShadow = true;
+
+						}
+
+					} );
+
+					scene.add( object );
+
+				} );
+
+
 
 				enableWater(scene)
 				
@@ -224,8 +274,26 @@
 
 				} );
 
+				const geometries = [];
+
 				for (let x = 0; x < xTiles; x++) {		
-					for (let y = 0; y < yTiles; y++) {		
+					for (let y = 0; y < yTiles; y++) {
+						const geometry = new THREE.PlaneGeometry( 1, 1 );
+						
+
+						if (mergeMesh == false) {
+							geometry.rotateX(Math.PI / 2)
+							const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+							const plane = new THREE.Mesh( geometry, material );
+							plane.position.set(x,0,y)
+							scene.add( plane );
+						} else {
+							geometry.translate(x,y,0)	
+							geometry.rotateX(Math.PI / 2)					
+							geometries.push(geometry)
+						}
+
+						/*
 						var img = new Image();
 						img.onload = function () {
 							// https://woodenraft.games/blog/generating-terrain-plane-geometry-three-js
@@ -263,7 +331,19 @@
 						};
 						// load img source
 						img.src = "assets/heightmap.png";
+						*/
 					}
+				}
+
+				if (mergeMesh) {
+					const geometry = BufferGeometryUtils.mergeBufferGeometries( geometries );
+					//geometry.computeBoundingSphere();
+
+					//var material = new THREE.MeshPhongMaterial({color: 0xFF0000});
+					const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+					var mesh = new THREE.Mesh(geometry, material);
+					mesh.position.set(0,0,0)
+					scene.add(mesh);
 				}
 
 				const light = new THREE.DirectionalLight( 0xffffff, 1 );
@@ -487,6 +567,8 @@
 					timeNextSpawn = time + objectTimePeriod;
 
 				}
+
+				if ( mixer ) mixer.update( deltaTime );
 
 				//updatePhysics( deltaTime );
 				if (waterEnabled) {
