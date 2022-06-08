@@ -173,17 +173,47 @@
 				return data;
 			}
 
+			function toGameObject(gameObject,object) {
+				if (gameObject.script != null) {
+					if (!gameObject.script.startsWith('/')) {
+						gameObject.script = '/'+gameObject.script
+					}
+					import(gameObject.script).then(({ update }) => {
+						object.updateFunction = update
+					})
+				}
+				
+				if (gameObject.name) {
+					object.name = gameObject.name
+				}
+
+				if (gameObject.tags) {
+					object.tags = gameObject.tags
+				}
+
+				if (gameObject.inputs) {
+					object.inputs = gameObject.inputs
+				}
+
+				//console.log(gameObject.transform)
+				var pos = gameObject.transform.position
+				var rot = gameObject.transform.rotation
+				var scl = gameObject.transform.scale
+
+				//console.log(object)
+				object.position.set(pos.x,pos.y,pos.z);
+				object.rotateX(rot.x*Math.PI/180)
+				object.rotateY(rot.y*Math.PI/180)
+				object.rotateZ(rot.z*Math.PI/180)
+				object.scale.set(scl.x,scl.y,scl.z); 
+			}
+
 			function loadFBXObject(gameObject,scene) {
 				//console.log(gameObject)
 				const fbxloader = new FBXLoader();
 				fbxloader.load( gameObject.model, function ( object ) {					
-					//console.log(object)
-					/*
-					mixer = new THREE.AnimationMixer( object );
+					toGameObject(gameObject,object)
 
-					const action = mixer.clipAction( object.animations[ 0 ] );
-					action.play();
-					*/
 					object.traverse( function ( child ) {
 
 						//console.log(child)
@@ -194,20 +224,35 @@
 						}
 					} );
 
-					//console.log(gameObject.transform)
-					var pos = gameObject.transform.position
-					var rot = gameObject.transform.rotation
-					var scl = gameObject.transform.scale
-
-					//console.log(object)
-					object.position.set(pos.x,pos.y,pos.z);
-					object.rotateX(rot.x*Math.PI/180)
-					object.rotateY(rot.y*Math.PI/180)
-					object.rotateZ(rot.z*Math.PI/180)
-					object.scale.set(scl.x,scl.y,scl.z); 
-
 					scene.add( object );
 				} );
+			}
+
+			function loadPrimitiveObject(gameObject,scene) {
+				var geometry
+				var material
+				var object
+				var color = gameObject.color
+				if (gameObject.color != null) {
+					color = new THREE.Color("#" + gameObject.color)
+				} else {
+					color=0xff000
+				}
+				if (gameObject.model == "plane")
+				{
+					geometry = new THREE.PlaneGeometry( 1, 1 );
+					material = new THREE.MeshBasicMaterial( {color: color, side: THREE.DoubleSide} );
+					object = new THREE.Mesh( geometry, material );
+				}
+				if (gameObject.model == "box")
+				{
+					
+					geometry = new THREE.BoxGeometry( 1, 1, 1, 1, 1, 1 );
+					material = new THREE.MeshBasicMaterial( {color: color, side: THREE.DoubleSide} );
+					object = new THREE.Mesh( geometry, material );
+				}
+				toGameObject(gameObject,object)
+				scene.add( object );
 			}
 
 			function loadScene(sceneFile,scene) {
@@ -221,10 +266,15 @@
 				success: function(data){
 					console.log("finished loading "+sceneFile)
 					//console.log(data)
+
 					for (var i in data.objects) {
 						var object=data.objects[i]
+
 						if (object.type == "fbx" && object.enabled == true) {
 							loadFBXObject(object,scene)
+						}
+						if (object.type == "primitive" && object.enabled == true) {
+							loadPrimitiveObject(object,scene)
 						}
 					}
 				}});
@@ -705,6 +755,13 @@
 
 				}
 
+				scene.traverse( function( node ) {
+					if ( node.updateFunction != null ) {
+						console.log(node.updateFunction)
+						node.updateFunction(scene,node,deltaTime)
+					}
+				});
+
 				/*
 				for (x = camera.position.x - 3; x < camera.position.x + 3, x++) {
 					for (z = camera.position.z - 3; z < camera.position.z + 3, z++) {
@@ -757,9 +814,7 @@
 						objThree.quaternion.set( q.x(), q.y(), q.z(), q.w() );
 
 					}
-
 				}
-
 			}
 
 		</script>

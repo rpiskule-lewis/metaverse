@@ -3,7 +3,7 @@
         {
             "type": "fbx",
             "model": "models/fbx/Samba Dancing.fbx",
-            "enabled": true,
+            "enabled": false,
             "transform": {
                 "position": {
                     "x":0,
@@ -25,7 +25,7 @@
         {
             "type": "fbx",
             "model": "models/fbx/Samba Dancing.fbx",
-            "enabled": true,
+            "enabled": false,
             "transform": {
                 "position": {
                     "x":100,
@@ -63,6 +63,250 @@
                     "x":0.1,
                     "y":0.1,
                     "z":0.1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "color": "0000FF",
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":0,
+                    "y":0,
+                    "z":0
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":0,
+                    "y":0,
+                    "z":100
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":100,
+                    "y":0,
+                    "z":0
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":100,
+                    "y":0,
+                    "z":100
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":-100,
+                    "y":0,
+                    "z":-100
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":-100,
+                    "y":0,
+                    "z":100
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":100,
+                    "y":0,
+                    "z":-100
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":0,
+                    "y":0,
+                    "z":-100
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
+                }
+            }
+        },
+        {
+            "type": "primitive",
+            "model": "plane",
+            "enabled": true,
+            "tag": ["environment"],
+            "script": "customjs/worldTracker.js",
+            "inputs": {
+                "worldSize":3
+            },
+            "transform": {
+                "position": {
+                    "x":-100,
+                    "y":0,
+                    "z":0
+                },
+                "rotation": {
+                    "x":90,
+                    "y":0,
+                    "z":90
+                },
+                "scale": {
+                    "x":100,
+                    "y":100,
+                    "z":1
                 }
             }
         }
